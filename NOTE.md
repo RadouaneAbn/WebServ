@@ -1,3 +1,21 @@
+
+```
+Client -> Request -> Header.
+```
+
+## Client class
+
+```c++
+
+class Client {
+	int socket_fd;
+	std::string _raw_bytes;
+	Request _request;
+	...
+}
+
+```
+
 ## REQUEST PARSING:
 
 ```c++
@@ -5,11 +23,39 @@
   * Request: 
   */
 
-class Request {
-RequestState requestState;
-std::string buffer;
-std::string rawBytes;
-Header headers;
+enum RequestState {
+	READ_START_LINE,	// Parse first line: "METHOD SP TARGET SP HTTP/VERSION\r\n"
+	READ_HEADERS,		// Parse headers until empty line: "\r\n\r\n"
+	READ_PLAIN_BODY,	// Read body bytes based on Content-Length
+	READ_CHUNK_BODY,	// Read chunked body until the final zero-size chunk is parsed
+	FINISHED			// Request fully parsed and ready for routing/handling
+};
+
+enum RequestMethod {
+    GET,
+    POST,
+    DELETE
+};
+
+class IRequest {
+	RequestState _state;		// ...
+    RequestMethod _method;	// ...
+    std::string _buffer;			// ...
+	std::string _path;				// ...
+
+	Headers *_headers;				// ...
+	std::string _raw_bytes;
+
+public:
+	Request();
+	~Request();
+
+	void read_request( void );
+
+	void extract_first_line( void );
+	void extract_headers( void );
+	void extract_body( void );
+
 }
 ```
 
@@ -24,7 +70,7 @@ Header headers;
 	* and detects the header terminator "\r\n\r\n".
 	* It then splits the request at "\r\n\r\n" and parses the first part.
   */
-class Headers {
+class IHeaders {
 	// the headers and cookies map
 	std::map <std::string, std::string> _headers;
 	std::map <std::string, std::string> _cookies;
@@ -32,7 +78,7 @@ class Headers {
 	void _parse_line( const std::string &line ); // delimiter is "\r\n"
 	void _extract_key_value( const std::string &line, char del ); // extract key: value for both headers and cookies (':' for header, '=' for cookie)
 	void _parse_cookies( const std::string &line ); // delimiter is ';'
-	std::string _trim( const std::string &str );
+	std::string _trim( const std::string &str ); // this will turn to a function to be used in other classes
 
 public:
 	// constructor that takes the raw headers string
@@ -96,8 +142,8 @@ std::ostream &operator<<(std::ostream &o, Headers &obj)
 enum RequestState {
 	READ_START_LINE,	// Parse first line: "METHOD SP TARGET SP HTTP/VERSION\r\n"
 	READ_HEADERS,		// Parse headers until empty line: "\r\n\r\n"
-	READ_PLAIN_BODY,		// Read body bytes based on Content-Length
-	READ_CHUNK_BODY,		// Read chunked body until the final zero-size chunk is parsed
+	READ_PLAIN_BODY,	// Read body bytes based on Content-Length
+	READ_CHUNK_BODY,	// Read chunked body until the final zero-size chunk is parsed
 	FINISHED			// Request fully parsed and ready for routing/handling
 };
 
@@ -115,8 +161,8 @@ enum RequestState {
 	- Parse header lines one by one until the empty line (`\r\n\r\n`).
 	- Normalize/store headers in a map (case-insensitive keys).
 	- Decide next state:
-		- If `Transfer-Encoding: chunked` -> `READ_CHNK_BODY`
-		- Else if body is expected (e.g. `Content-Length`) -> `READ_PAIN_BODY`
+		- If `Transfer-Encoding: chunked` -> `READ_CHUNK_BODY`
+		- Else if body is expected (e.g. `Content-Length`) -> `READ_PLAIN_BODY`
 		- Otherwise -> `FINISHED`
 
 
