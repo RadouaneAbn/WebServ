@@ -25,6 +25,10 @@ fclean: clean
 
 re: fclean all
 
+run: all
+	clear
+	./$(NAME)
+
 debug: CXXFLAGS += -g -O0
 debug: all
 

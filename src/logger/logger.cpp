@@ -38,6 +38,21 @@ void Logger::log(LogLevel level, const std::string& msg, const char* file, int l
         _file << entry << std::endl;
 }
 
+void Logger::log2(LogLevel level, const std::string& msg) {
+    if (level < _level)
+        return;
+
+    std::ostringstream ss;
+    ss << msg;
+
+    std::string entry = ss.str();
+
+    std::cerr << color(level) << entry << RESET_COLOR << std::endl;
+
+    if (_file.is_open())
+        _file << entry << std::endl;
+}
+
 std::string Logger::timestamp() {
     time_t now = time(NULL);
     char buf[20];
@@ -62,6 +77,8 @@ const char* Logger::levelStr(LogLevel l) {
 
 const char* Logger::color(LogLevel l) {
     switch (l) {
+        case SIMPLE:
+            return "\033[33m"; // Yellow
         case DEBUG:
             return "\033[1;36m"; // Cyan
         case INFO:

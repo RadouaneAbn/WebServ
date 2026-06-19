@@ -16,10 +16,10 @@ public:
 	}
 };
 
-class LexerException : public std::exception
+class LexerException : public ConfigException
 {
 public:
-    LexerException();
+    LexerException(const std::string &msg = "Lexer error") : ConfigException(msg) {};
     ~LexerException() throw() {};
 
 };

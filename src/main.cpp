@@ -12,8 +12,9 @@ bool validate_main(int ac, char **av)
 
 int main(int ac, char **av)
 {
-    std::string config_file;
     Logger::instance().setLevel(DEBUG);
+
+    std::string config_file;
     // Logger::instance().setFile("webserv.log");
     if (!validate_main(ac, av))
         return (1);
@@ -21,7 +22,15 @@ int main(int ac, char **av)
         config_file = "config_files/default.conf";
     else
         config_file = av[1];
-
     
+    try {
+        Lexer lexer(config_file);   
+        lexer.init();
+        lexer.printTokens();
+    }
+    catch (const std::exception &e) {
+        LOG_ERROR(e.what());
+    }
+
     return (0);
 }

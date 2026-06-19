@@ -11,5 +11,8 @@
 
 /* My header files */
 #include <logger.hpp>
+#include <Exceptions.hpp>
+#include <HttpExceptions.hpp>
+#include <Lexer.hpp>
 
 #endif // WEBSERV_H
