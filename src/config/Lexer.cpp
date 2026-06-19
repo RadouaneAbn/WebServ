@@ -60,7 +60,7 @@ void Lexer::TokenizeLine( std::string &line )
 			if (c == '{')
 				addToken(TOKEN_LBRACE, "{", _line);
 			else if (c == '}')
-				addToken(TOKEN_LBRACE, "}", _line);
+				addToken(TOKEN_RBRACE, "}", _line);
 			else if (c == ';')
 				addToken(TOKEN_SEMICOLON, ";", _line);
 		}
@@ -95,16 +95,28 @@ const std::vector<Token> Lexer::getTokens( void ) const
 	return _tokens;
 }
 
-void Lexer::printTokens( void )
+void Lexer::printTokens(void)
 {
-	// size_t diff = 0;
-	for (std::vector<Token>::const_iterator it = _tokens.begin(); it < _tokens.end(); it++)
-	{
-		std::string value = it->value;
-		if (it->type == TOKEN_KEYWORD || it->type == TOKEN_VALUE)
-			value += " ";
-		else if (it->type == TOKEN_LBRACE || it->type == TOKEN_RBRACE || it->type == TOKEN_SEMICOLON)
-			value += " ";
-		std::cout << value;
-	}
+    const char *type_names[] = {
+        "KEYWORD", "VALUE", "LBRACE", "RBRACE", "SEMICOLON", "EOF"
+    };
+    const char *colors[] = {
+        "\033[36m", "\033[33m", "\033[35m", "\033[35m", "\033[90m", "\033[31m"
+    };
+
+    int indent = 0;
+
+    for (std::vector<Token>::const_iterator it = _tokens.begin(); it->type != TOKEN_EOF; it++)
+    {
+        if (it->type == TOKEN_RBRACE)
+            indent--;
+
+        std::cout << "[" << std::setw(3) << it->line << "] "
+                   << std::string(indent * 2, ' ')
+                   << colors[it->type] << std::setw(10) << std::left << type_names[it->type]
+                   << RESET << it->value << std::endl;
+
+        if (it->type == TOKEN_LBRACE)
+            indent++;
+    }
 }
