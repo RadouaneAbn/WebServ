@@ -3,7 +3,7 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 
 NAME = webserv
 
-SRC_DIRS = config http server cgi session logger
+SRC_DIRS = config http server cgi session logger utils
 SRCS = src/main.cpp $(foreach dir,$(SRC_DIRS),$(wildcard src/$(dir)/*.cpp))
 OBJS = $(patsubst src/%.cpp,obj/%.o,$(SRCS))
 INCLUDES = -Iincludes
@@ -21,7 +21,7 @@ clean:
 	rm -rf obj/
 
 fclean: clean
-	rm $(NAME)
+	rm -rf $(NAME)
 
 re: fclean all
 

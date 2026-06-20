@@ -1,4 +1,9 @@
+#include <colors.h>
 #include <Lexer.hpp>
+#include <Exceptions.hpp>
+#include <string>
+#include <iostream>
+#include <iomanip>
 
 Token::Token(TokenType type, std::string value, size_t line) : type(type), value(value), line(line) {}
 
@@ -7,6 +12,7 @@ Lexer::Lexer( std::string &filename ) : _line(0) {
 	_file.open(filename.c_str());
 	if (!_file.good())
 		throw LexerException("Could not open configuration file: " + filename);
+	init();
 }
 
 
@@ -90,7 +96,7 @@ bool Lexer::isSpecialChar( char c )
 	return (c == '{' || c == '}' || c == ';');
 }
 
-const std::vector<Token> Lexer::getTokens( void ) const
+const std::vector<Token>& Lexer::getTokens( void ) const
 {
 	return _tokens;
 }

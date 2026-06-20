@@ -1,7 +1,9 @@
-#ifndef TOKENIZER_HPP
-#define TOKENIZER_HPP
+#ifndef LEXER_HPP
+#define LEXER_HPP
 
-#include <webserv.h>
+#include <vector>
+#include <string>
+#include <fstream>
 
 enum TokenType {
 	TOKEN_KEYWORD,		// "server", "listen", "root", "location"
@@ -35,9 +37,9 @@ public:
 	Lexer(std::string &filename);
 	~Lexer();
 
-	void		init( void );
-	const		std::vector<Token> getTokens( void ) const;
-	void		printTokens( void );
+	void						init( void );
+	const std::vector<Token>	&getTokens( void ) const;
+	void						printTokens( void );
 };
 
-#endif // TOKENIZER_HPP
+#endif // LEXER_HPP

@@ -1,0 +1,237 @@
+═══════════════════════════════════════════════════
+  PARSER PSEUDOCODE — builds Config from Token stream
+═══════════════════════════════════════════════════
+
+GOAL
+    Read tokens produced by the lexer and build:
+        Config
+          └── list of ServerBlock
+                ├── directives (listen, root, server_name, error_page, client_max_body_size...)
+                └── list of Location
+                      └── directives (root, index, methods, cgi, upload_path...)
+
+
+─────────────────────────────────────────
+CLASS Parser
+─────────────────────────────────────────
+
+FIELDS:
+    tokens : List<Token>
+    pos    : int = 0
+
+
+HELPER METHODS:
+
+    FUNCTION current() -> Token:
+        RETURN tokens[pos]
+
+    FUNCTION advance() -> Token:
+        tok = tokens[pos]
+        IF pos < tokens.length - 1:
+            pos += 1
+        RETURN tok
+
+    FUNCTION expect(type) -> Token:
+        IF current().type != type:
+            THROW ConfigError(
+                "expected " + type_name(type) +
+                " but got '" + current().value + "'",
+                current().line)
+        RETURN advance()
+
+    FUNCTION check(type) -> bool:
+        RETURN current().type == type
+
+
+─────────────────────────────────────────
+TOP LEVEL: parse()
+─────────────────────────────────────────
+
+FUNCTION parse() -> Config:
+    config = new Config()
+
+    WHILE NOT check(TOKEN_EOF):
+        IF check(TOKEN_KEYWORD) AND current().value == "server":
+            config.server_blocks.append( parse_server_block() )
+        ELSE:
+            THROW ConfigError("expected 'server' block", current().line)
+
+    IF config.server_blocks.is_empty():
+        THROW ConfigError("config file has no server blocks", 0)
+
+    RETURN config
+
+
+─────────────────────────────────────────
+parse_server_block()
+─────────────────────────────────────────
+
+FUNCTION parse_server_block() -> ServerBlock:
+    expect(TOKEN_KEYWORD)     // consumes "server"
+    expect(TOKEN_LBRACE)      // consumes "{"
+
+    block = new ServerBlock()
+
+    WHILE NOT check(TOKEN_RBRACE):
+        IF check(TOKEN_EOF):
+            THROW ConfigError("unexpected end of file, missing '}'", current().line)
+
+        IF current().value == "location":
+            block.locations.append( parse_location_block() )
+        ELSE IF current().type == TOKEN_KEYWORD:
+            parse_directive_into(block)     // e.g. listen, root, server_name...
+        ELSE:
+            THROW ConfigError("unexpected token '" + current().value + "'", current().line)
+
+    expect(TOKEN_RBRACE)      // consumes "}"
+    RETURN block
+
+
+─────────────────────────────────────────
+parse_location_block()
+─────────────────────────────────────────
+
+FUNCTION parse_location_block() -> Location:
+    expect(TOKEN_KEYWORD)            // consumes "location"
+    path_token = expect(TOKEN_VALUE) // e.g. "/upload"
+    expect(TOKEN_LBRACE)
+
+    loc = new Location()
+    loc.path = path_token.value
+
+    WHILE NOT check(TOKEN_RBRACE):
+        IF check(TOKEN_EOF):
+            THROW ConfigError("unexpected end of file, missing '}'", current().line)
+
+        parse_directive_into(loc)     // e.g. root, methods, cgi, upload_path...
+
+    expect(TOKEN_RBRACE)
+    RETURN loc
+
+
+─────────────────────────────────────────
+parse_directive_into(target)
+─────────────────────────────────────────
+  target can be a ServerBlock OR a Location
+  reads:   directive_name value [value...] ;
+
+FUNCTION parse_directive_into(target):
+    name_token = expect(TOKEN_KEYWORD)
+    name = name_token.value
+
+    values = []
+    WHILE check(TOKEN_VALUE):
+        values.append( advance().value )
+
+    expect(TOKEN_SEMICOLON)
+
+    IF values.is_empty():
+        THROW ConfigError("directive '" + name + "' requires a value", name_token.line)
+
+    SWITCH name:
+        CASE "listen":
+            target.listen_port = to_int(values[0])
+
+        CASE "server_name":
+            target.server_names = values            // can have multiple
+
+        CASE "root":
+            target.root = values[0]
+
+        CASE "index":
+            target.index = values[0]
+
+        CASE "methods":
+            target.allowed_methods = values          // GET POST DELETE...
+
+        CASE "client_max_body_size":
+            target.client_max_body_size = to_size_t(values[0])
+
+        CASE "error_page":
+            // e.g. "error_page 404 /errors/404.html;"
+            code = to_int(values[0])
+            page = values[1]
+            target.error_pages[code] = page
+
+        CASE "cgi":
+            // e.g. "cgi py /usr/bin/python3;"
+            extension = values[0]
+            executable = values[1]
+            target.cgi[extension] = executable
+
+        CASE "upload_path":
+            target.upload_path = values[0]
+
+        CASE "autoindex":
+            target.autoindex = (values[0] == "on")
+
+        CASE "return":
+            // e.g. "return 301 /new-path;"
+            target.redirect_code = to_int(values[0])
+            target.redirect_path = values[1]
+
+        DEFAULT:
+            THROW ConfigError("unknown directive '" + name + "'", name_token.line)
+
+
+─────────────────────────────────────────
+EXAMPLE WALKTHROUGH
+─────────────────────────────────────────
+  input tokens (from your lexer):
+
+    KEYWORD(server) LBRACE
+    KEYWORD(listen) VALUE(8080) SEMICOLON
+    KEYWORD(root)   VALUE(www)  SEMICOLON
+    KEYWORD(location) VALUE(/upload) LBRACE
+        KEYWORD(methods) VALUE(GET) VALUE(POST) SEMICOLON
+    RBRACE
+    RBRACE
+    EOF
+
+  parse() call tree:
+
+    parse()
+      └─ parse_server_block()
+            ├─ parse_directive_into(block)   → sets block.listen_port = 8080
+            ├─ parse_directive_into(block)   → sets block.root = "www"
+            └─ parse_location_block()
+                  └─ parse_directive_into(loc) → sets loc.allowed_methods = [GET, POST]
+
+  result: Config with 1 ServerBlock containing 1 Location
+
+
+
+
+
+server {
+    listen 8080;
+    
+    error_page 404 /errors/404_not_found.html;
+    error_page 500 /errors/500_internal_error.html;
+    error_page 403 /errors/403_forbidden.html;
+
+###############################################################
+
+    # Both 500 and 502 errors will serve the 50x.html page
+    error_page 500 502 503 504 /errors/50x.html;
+    
+    # Both 404 and 403 will share this page
+    error_page 404 403 /errors/bad_request.html;
+
+###############################################################
+
+    # Redirect 404 errors to an external site or a global domain
+    error_page 404 http://example.com/global_404.html;
+
+###############################################################
+
+    root ./site;
+    
+    # Global default for the whole server
+    error_page 404 /generic_404.html;
+
+    location /secret_api {
+        # Overrides the global 404 page specifically for this route
+        error_page 404 /custom_api_404.json; 
+    }
+}

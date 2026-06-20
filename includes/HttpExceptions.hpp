@@ -1,7 +1,8 @@
 #ifndef HTTPEXCEPTIONS_HPP
 #define HTTPEXCEPTIONS_HPP
 
-#include <webserv.h>
+#include <exception>
+#include <string>
 
 class HttpException : public std::exception
 {

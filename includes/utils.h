@@ -1,6 +1,10 @@
-#ifndef UTILS
-#define UTILS
+#ifndef UTILS_H
+#define UTILS_H
 
-#include <webserv.h>
+#include <string>
+#include <sstream>
 
-#endif // UTILS
+std::string ft_itol(size_t n);
+std::string ft_itoa(int n);
+
+#endif // UTILS_H

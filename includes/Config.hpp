@@ -1,10 +1,13 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
-#include <webserv.h>
+#include <string>
+#include <vector>
+#include <map>
+#include <cstdlib>
 
 struct Location {
-	Location() : autoindex(false), client_max_body_size(-1), upload_enabled(false), redirect_code(-1) {}
+	Location() : autoindex(false), client_max_body_size(-1), upload_enabled(false) {}
 	bool								autoindex;
 	std::string							index;
 	std::string							path;
@@ -16,12 +19,11 @@ struct Location {
 	bool								is_cgi;
 	std::string							upload_path;
 	bool								upload_enabled;
-	std::string							redirect_path;
-	int 								redirect_code;
+	std::pair<int, std::string>			redirect;
 };
 
 struct ListenDirective {
-	ListenDirective() : ip("0.0.0.0"), port(80) {}
+	ListenDirective(std::string ip_addr, int port_number) : ip(ip_addr), port(port_number) {}
 	std::string					ip;
 	int							port;
 };
@@ -37,6 +39,7 @@ struct ServerBlock {
 };
 
 class Config {
+public:
 	std::vector<ServerBlock>	_server_blocks;
 };
 

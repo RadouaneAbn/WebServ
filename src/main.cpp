@@ -1,4 +1,6 @@
 #include <webserv.h>
+#include <Logger.hpp>
+#include <Parser.hpp>
 
 bool validate_main(int ac, char **av)
 {
@@ -24,9 +26,7 @@ int main(int ac, char **av)
         config_file = av[1];
     
     try {
-        Lexer lexer(config_file);   
-        lexer.init();
-        lexer.printTokens();
+        Parser parser(config_file);
     }
     catch (const std::exception &e) {
         LOG_ERROR(e.what());

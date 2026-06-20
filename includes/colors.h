@@ -3,6 +3,7 @@
 
 // Reset
 # define RESET          "\033[00m"
+# define BOLD           "\033[1m"
 
 // Standard Colors (Bold for better visibility in terminal)
 # define RED            "\033[31m"      // Use for 4xx and 5xx Errors
@@ -12,6 +13,7 @@
 # define MAGENTA        "\033[35m"      // Use for Header info (Radouane's part)
 # define CYAN           "\033[36m"      // Use for Request-Line / Method info
 # define WHITE          "\033[37m"
+# define GRAY           "\033[90m"
 
 // Bold Versions
 # define BOLD_RED       "\033[1;31m"

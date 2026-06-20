@@ -1,7 +1,8 @@
 #ifndef EXCEPTIONS_HPP
 #define EXCEPTIONS_HPP
 
-#include <webserv.h>
+#include <exception>
+#include <string>
 
 class ConfigException : public std::exception
 {
@@ -22,6 +23,13 @@ public:
     LexerException(const std::string &msg = "Lexer error") : ConfigException(msg) {};
     ~LexerException() throw() {};
 
+};
+
+class ParserException : public ConfigException
+{
+public:
+    ParserException(const std::string &msg = "Parser error") : ConfigException(msg) {};
+    ~ParserException() throw() {};
 };
 
 #endif // EXCEPTIONS_HPP
