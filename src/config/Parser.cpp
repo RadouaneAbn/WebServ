@@ -81,6 +81,11 @@ Location Parser::parseLocationBlock( void )
 void Parser::parseServerDirectives(ServerBlock &server_block)
 {
     Token directive = expect(TOKEN_KEYWORD);
+    if (directive.value != "listen" && directive.value != "root" && directive.value != "server_name" &&
+        directive.value != "error_page" && directive.value != "client_max_body_size")
+    {
+        throw ParserException("Unknown directive '" + directive.value + "' at line " + ft_itol(directive.line));
+    }
     std::string name = directive.value;
 
     std::vector<std::string> values;
@@ -90,7 +95,7 @@ void Parser::parseServerDirectives(ServerBlock &server_block)
     expect(TOKEN_SEMICOLON);
 
     if (values.empty())
-        throw ParserException("directive '" + name + "' requires a value" + ft_itol(directive.line));
+        throw ParserException("directive '" + name + "' requires a value at line" + ft_itol(directive.line));
     
     if (name == "listen")
         save_listen_directive(server_block, directive, values);
@@ -111,14 +116,17 @@ void Parser::parseLocationDirectives(Location &location)
     Token directive = expect(TOKEN_KEYWORD);
     std::string name = directive.value;
 
+    if (name == "location")
+        throw ParserException("forgot to close 'location' block at line " + ft_itol(directive.line));
+
     std::vector<std::string> values;
     while (check(TOKEN_VALUE))
         values.push_back(advance().value);
-    
+
     expect(TOKEN_SEMICOLON);
 
     if (values.empty())
-        throw ParserException("directive '" + name + "' requires a value" + ft_itol(directive.line));
+        throw ParserException("directive '" + name + "' requires a value at line " + ft_itol(directive.line));
     
     if (name == "root")
         save_root_directive(location, directive, values);
@@ -157,6 +165,13 @@ Token &Parser::peek(void)
     return _tokens[_pos];
 }
 
+Token &Parser::ppeek(void)
+{
+    if (_pos - 1 >= 0)
+        return _tokens[_pos - 1];
+    return _tokens[_pos];
+}
+
 std::string tokenTypeToString(TokenType type)
 {
     switch (type)
@@ -182,7 +197,7 @@ Token &Parser::expect(TokenType type)
 {
     if (check(type))
         return advance();
-    throw ParserException("Expected token type " + tokenTypeToString(type) + " but got " + tokenTypeToString(peek().type) + " at line " + ft_itol(peek().line));
+    throw ParserException("Expected token type " + tokenTypeToString(type) + " but got " + tokenTypeToString(peek().type) + " at line " + ft_itol(ppeek().line));
 }
 
 bool Parser::check(TokenType type)

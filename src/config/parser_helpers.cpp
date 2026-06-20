@@ -14,15 +14,8 @@ ssize_t parse_client_max_body_size(std::vector<std::string> &values, size_t line
     if (size_str.empty())
         throw ParserException("Client max body size cannot be empty at line: " + ft_itol(line));
 
-    ssize_t multiplier = 1;
-    bool has_suffix = false;
     char last_char = size_str[size_str.length() - 1];
-
-    if (last_char == 'K' || last_char == 'k') { multiplier = 1024; has_suffix = true; }
-    else if (last_char == 'M' || last_char == 'm') { multiplier = 1024 * 1024; has_suffix = true; }
-    else if (last_char == 'G' || last_char == 'g') { multiplier = 1024 * 1024 * 1024; has_suffix = true; }
-    else if (!std::isdigit(static_cast<unsigned char>(last_char)))
-        throw ParserException("Invalid size suffix '" + std::string(1, last_char) + "' at line: " + ft_itol(line));
+    bool has_suffix = !std::isdigit(static_cast<unsigned char>(last_char));
 
     std::string number_part = has_suffix ? size_str.substr(0, size_str.length() - 1) : size_str;
 
@@ -32,7 +25,17 @@ ssize_t parse_client_max_body_size(std::vector<std::string> &values, size_t line
     for (size_t i = 0; i < number_part.length(); i++)
     {
         if (!std::isdigit(static_cast<unsigned char>(number_part[i])))
-            throw ParserException("Invalid character in client max body size: '" + std::string(1, number_part[i]) + "' at line: " + ft_itol(line));
+            throw ParserException("Invalid client max body size at line: " + ft_itol(line));
+    }
+
+    ssize_t multiplier = 1;
+    if (has_suffix)
+    {
+        if (last_char == 'K' || last_char == 'k') multiplier = 1024;
+        else if (last_char == 'M' || last_char == 'm') multiplier = 1024 * 1024;
+        else if (last_char == 'G' || last_char == 'g') multiplier = 1024 * 1024 * 1024;
+        else
+            throw ParserException("Invalid size suffix '" + std::string(1, last_char) + "' at line: " + ft_itol(line));
     }
 
     errno = 0;
@@ -42,5 +45,6 @@ ssize_t parse_client_max_body_size(std::vector<std::string> &values, size_t line
 
     if (parsed != 0 && multiplier > 0 && parsed > (LLONG_MAX / multiplier))
         throw ParserException("Client max body size value too large at line: " + ft_itol(line));
+
     return (static_cast<ssize_t>(parsed) * multiplier);
 }

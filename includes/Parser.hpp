@@ -17,6 +17,7 @@ class Parser {
 
     Token& advance( void );
     Token& peek( void );
+    Token& ppeek( void );
     Token& expect(TokenType type);
     bool check(TokenType type);
 public:
