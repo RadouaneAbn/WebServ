@@ -29,10 +29,10 @@ void Server::startServer(void)
 
         for (int i = 0; i < events_count; i++)
         {
-            FdContext *context = static_cast<FdContext*>(events[i].data.ptr);
+            // FdContext *context = static_cast<FdContext*>(events[i].data.ptr);
             try
             {
-                handleEvent(context);
+                handleEvent(events[i]);
             }
             catch (const HttpException &e)
             {
@@ -65,4 +65,12 @@ Server::~Server( void )
 FdContext *Server::getFdContext(int fd)
 {
     return (_fd_contexts[fd]);
+}
+
+void Server::destroyFdContext(FdContext *context)
+{
+    if (context->type == CLIENT_FD)
+        delete context->client;
+    _fd_contexts.erase(context->fd);
+    delete context;
 }

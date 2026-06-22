@@ -35,5 +35,12 @@ void setFdNonBlocking(int fd);
 struct sockaddr_in create_socket_info(ListenDirective &listen_directive);
 FdContext *create_epoll_event(int epoll_fd, int fd, FDType type, uint32_t events, Client *client);
 void handle_signal(int signum);
+std::string trim(const std::string &s);
+std::string to_lower(const std::string &s);
+std::string to_upper(const std::string &s);
+bool has_any(const std::string &s, const std::string &chars);
+bool has_other(const std::string &s, std::string &chars);
+bool method_is_valid(const std::string& method);
+std::string get_event_type(FDType t);
 
 #endif // UTILS_H

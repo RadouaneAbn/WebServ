@@ -61,10 +61,12 @@ private:
 	std::map<int, ServerBlock*>		_server_blocks;
 
 	int createListenSocket(ListenDirective &listen_directive);
-	void handleEvent(FdContext *context);
-	void acceptClient(FdContext *context);
-	// void handleClient(FdContext *context);
-	// void handleCgi(FdContext *context);
+	void handleEvent(struct epoll_event &event);
+	void acceptClient(FdContext *context, uint32_t events);
+	void handleClient(FdContext *context, uint32_t events);
+	// void handleCgi(FdContext *context, uint32_t events);
+
+	void destroyFdContext(FdContext *context);
 };
 
 #endif // SERVER_HPP
