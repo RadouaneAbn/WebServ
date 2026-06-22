@@ -1,6 +1,8 @@
 #include <webserv.h>
+#include <utils.h>
 #include <Logger.hpp>
 #include <Parser.hpp>
+#include <Server.hpp>
 
 bool validate_main(int ac, char **av)
 {
@@ -26,7 +28,13 @@ int main(int ac, char **av)
         config_file = av[1];
     
     try {
+        std::signal(SIGINT, handle_signal);   
+        std::signal(SIGTERM, handle_signal);
+
         Parser parser(config_file);
+        Server server(parser.getConfig());
+        server.initServer();
+        server.startServer();
     }
     catch (const std::exception &e) {
         LOG_ERROR(e.what());

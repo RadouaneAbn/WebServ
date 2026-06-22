@@ -24,8 +24,23 @@ struct Location {
 
 struct ListenDirective {
 	ListenDirective(std::string ip_addr, int port_number) : ip(ip_addr), port(port_number) {}
+	ListenDirective(const ListenDirective &other) : ip(other.ip), port(other.port) {}
+	ListenDirective &operator=(const ListenDirective &other) {
+        if (this != &other) {
+            this->ip = other.ip;
+            this->port = other.port;
+        }
+        return *this;
+    }
 	std::string					ip;
 	int							port;
+
+	bool operator<(const ListenDirective &right) const {
+        if (this->ip != right.ip) {
+            return this->ip < right.ip;
+        }
+        return this->port < right.port;
+    }
 };
 
 struct ServerBlock {

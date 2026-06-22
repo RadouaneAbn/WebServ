@@ -32,4 +32,11 @@ public:
     ~ParserException() throw() {};
 };
 
+class ServerException : public ConfigException
+{
+public:
+    ServerException(const std::string &msg = "Server error") : ConfigException(msg) {};
+    ~ServerException() throw() {};
+};
+
 #endif // EXCEPTIONS_HPP

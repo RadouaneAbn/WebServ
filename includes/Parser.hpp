@@ -25,6 +25,7 @@ public:
     ~Parser();
 
     void printConfig(void) const;
+    Config *getConfig(void) const;
 };
 
 /* Parser helper functions */

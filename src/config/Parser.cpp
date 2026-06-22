@@ -16,7 +16,9 @@ Parser::Parser(std::string &filename) : _pos(0)
     printConfig();
 }
 
-Parser::~Parser() {}
+Parser::~Parser() {
+    delete _config;
+}
 
 void Parser::parseTokens(void)
 {
@@ -203,4 +205,9 @@ Token &Parser::expect(TokenType type)
 bool Parser::check(TokenType type)
 {
     return peek().type == type;
+}
+
+Config *Parser::getConfig(void) const
+{
+    return _config;
 }
